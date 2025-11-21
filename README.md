@@ -4,7 +4,7 @@ This application uses TKinter python module to create an interface. On this inte
 
 ## Precise mathematical context of the application use
 
-## Application functionnalities
+## Application functionalities
 
 ### Canvas panel
 
