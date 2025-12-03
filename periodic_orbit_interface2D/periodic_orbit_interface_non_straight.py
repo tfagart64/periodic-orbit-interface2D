@@ -1,6 +1,6 @@
-#%%Importations
+#%%Imports
 import tkinter as tk
-from tkinter import ttk  # Using ttk for potentially more modern widgets
+from tkinter import ttk
 import numpy as np
 import pandas as pd
 from .utilitary import switch_axis
@@ -9,8 +9,8 @@ from .base_template_app import Visualisation_app_template
 #%% Visualisation_app_non_straight class
 class Visualisation_app_non_straight(Visualisation_app_template):
     
-    def __init__(self, root):
-        super().__init__(root)
+    # def __init__(self, root):
+    #     super().__init__(root)
     
     def _get_app_mode(self):
         self.app_mode = "non_straight"
@@ -146,11 +146,8 @@ class Visualisation_app_non_straight(Visualisation_app_template):
                                   "rel_space_coords": np.array([row["init_x"] - row["center_x"], row["init_y"] - row["center_y"]])}
         
         # --- Update gamma values ---
-        try:
-            self.gamma_array = np.array([[row["gamma_11"], row["gamma_21"], row["gamma_31"], row["gamma_41"]],
-                                         [row["gamma_12"], row["gamma_22"], row["gamma_32"], row["gamma_42"]]])
-        except KeyError:
-            print('gamma values were not found, keeping the same values')
+        self.gamma_array = np.array([[row["gamma_11"], row["gamma_21"], row["gamma_31"], row["gamma_41"]],
+                                     [row["gamma_12"], row["gamma_22"], row["gamma_32"], row["gamma_42"]]])
     
     def _update_gamma_input_fields(self):
         self.gamma_11_var.set(f"{self.gamma_array[0,0]:.2f}")
@@ -230,19 +227,19 @@ class Visualisation_app_non_straight(Visualisation_app_template):
 
     def _find_intersection_point_between_curve_and_axis(self, curved_traj_array_relative, axis):
         """
-        Trouve le point d'intersection entre une trajectoire 2D et un axe spécifié.
+        Finds the intersection point between a 2D trajectory and a specified axis.
         
-        Paramètres
+        Parameters
         ----------
-        curved_traj_array_relative : array-like de forme (N, 2)
-            Tableau contenant les points de la trajectoire [x, y].
+        curved_traj_array_relative : array-like of shape (N, 2)
+            Array containing the trajectory points [x, y].
         axis : str
-            'x=0' ou 'y=0' selon l'axe recherché.
+            'x=0' or 'y=0' depending on the axis to be checked.
             
-        Retour
-        ------
-        (x, y) : tuple ou None
-            Coordonnées du point d'intersection (interpolé), ou None si pas d'intersection.
+        Returns
+        -------
+        (x, y) : tuple or None
+            Coordinates of the (interpolated) intersection point, or None if no intersection exists.
         """
     
         traj = np.array(curved_traj_array_relative)
@@ -257,25 +254,25 @@ class Visualisation_app_non_straight(Visualisation_app_template):
             other = x_vals
         else:
             raise ValueError(f"Invalid axis name: '{axis}'. Expected 'x=0' or 'y=0'.")
-    
-        # On cherche un changement de signe dans la valeur correspondant à l'axe
+        
+        # Looking for a sign change in the axis direction
         sign_changes = np.where(np.sign(values[:-1]) * np.sign(values[1:]) < 0)[0]
     
         if len(sign_changes) == 0:
             return None  # Pas d'intersection détectée
     
-        # On suppose une seule intersection (ou on prend la première)
+        # Taking the first intersection (there should not be second one)
         last_index = sign_changes[0]
     
-        # Interpolation linéaire pour estimer le point exact
+        # Linear interpolation to refine even more the intersection point
         v1, v2 = values[last_index], values[last_index+1]
         o1, o2 = other[last_index], other[last_index+1]
-        t = abs(v1) / (abs(v2 - v1))  # fraction entre les deux points
+        t = abs(v1) / (abs(v2 - v1))  # fraction between the two points
     
         if axis == 'x=0':
             x = 0
             y = o1 + t * (o2 - o1)
-        else:  # y=0
+        else:
             y = 0
             x = o1 + t * (o2 - o1)
     
@@ -344,7 +341,7 @@ class Visualisation_app_non_straight(Visualisation_app_template):
         self.gamma_input_frame = ttk.LabelFrame(self.right_frame, text="Gamma values", padding=10)
         self.gamma_input_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        # Domaine 1 input frame
+        # Domain 1 input frame
         self.D1_input_frame = ttk.LabelFrame(self.gamma_input_frame, padding=5, text="Domain 1 (Top-right)")
         self.D1_input_frame.pack(fill=tk.X, padx=5, pady=5)
         
@@ -356,7 +353,7 @@ class Visualisation_app_non_straight(Visualisation_app_template):
         self.gamma_12_entry = ttk.Entry(self.D1_input_frame, textvariable=self.gamma_12_var, width=10)
         self.gamma_12_entry.pack(side="left", padx=5)
         
-        # Domaine 2 input frame
+        # Domain 2 input frame
         self.D2_input_frame = ttk.LabelFrame(self.gamma_input_frame, padding=5, text="Domain 2 (Top-left)")
         self.D2_input_frame.pack(fill=tk.X, padx=5, pady=5)
         
@@ -368,7 +365,7 @@ class Visualisation_app_non_straight(Visualisation_app_template):
         self.gamma_22_entry = ttk.Entry(self.D2_input_frame, textvariable=self.gamma_22_var, width=10)
         self.gamma_22_entry.pack(side="left", padx=5)
         
-        # Domaine 3 input frame
+        # Domain 3 input frame
         self.D3_input_frame = ttk.LabelFrame(self.gamma_input_frame, padding=5, text="Domain 3 (Bottom-left)")
         self.D3_input_frame.pack(fill=tk.X, padx=5, pady=5)
         
@@ -380,7 +377,7 @@ class Visualisation_app_non_straight(Visualisation_app_template):
         self.gamma_32_entry = ttk.Entry(self.D3_input_frame, textvariable=self.gamma_32_var, width=10)
         self.gamma_32_entry.pack(side="left", padx=5)
         
-        # Domaine 4 input frame
+        # Domain 4 input frame
         self.D4_input_frame = ttk.LabelFrame(self.gamma_input_frame, padding=5, text="Domain 4 (Bottom-right)")
         self.D4_input_frame.pack(fill=tk.X, padx=5, pady=5)
         
@@ -440,17 +437,17 @@ class Visualisation_app_non_straight(Visualisation_app_template):
             results_text += "No points placed."
         
         if self.initial_point or self.focal_points:
-            results_text += "Coordonnées des points (absolues)\n"
+            results_text += "Coordinates of the points (absolute)\n"
         
         if self.initial_point:
             x_space_abs, y_space_abs = self.initial_point['abs_space_coords']
-            results_text += f"Point initial : ({x_space_abs:.2f}, {y_space_abs:.2f})\n\n"
+            results_text += f"Initial point : ({x_space_abs:.2f}, {y_space_abs:.2f})\n\n"
         
         if self.focal_points:
             for point_id in sorted(self.focal_points):
                 point_data = self.focal_points[point_id]
                 x_space_abs, y_space_abs = point_data['abs_space_coords']
-                results_text += f"Point focal {point_id} : ({x_space_abs:.2f}, {y_space_abs:.2f})"
+                results_text += f"Focal point {point_id} : ({x_space_abs:.2f}, {y_space_abs:.2f})"
                 
                 if 'angle_theta' in point_data and 'angle_delta' in point_data:
                     results_text += f" (Theta: {point_data['angle_theta']:.2f}°, Delta: {point_data['angle_delta']:.2f}°)\n"
@@ -458,11 +455,11 @@ class Visualisation_app_non_straight(Visualisation_app_template):
                     results_text += "\n"
             
             if len(self.focal_points) == 4:
-                results_text += "\n\nGrandeurs caractéristiques\n"
+                results_text += "\n\nCharacteristic values\n"
                 results_text += f"rho : {self._rho:.4f}\n"
                 if self._rho > 1:
-                    results_text += "\n Apparition d'une orbite périodique \n"
+                    results_text += "\n Emergence of a periodic orbit \n"
                 else:
-                    results_text += "\n Pas d'orbite périodique \n"
+                    results_text += "\n No periodic orbit observed \n"
             
         self.results_label.config(text=results_text)

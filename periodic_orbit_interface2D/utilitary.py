@@ -1,6 +1,6 @@
 #%%Importations
 import tkinter as tk
-from tkinter import ttk  # Using ttk for potentially more modern widgets
+from tkinter import ttk
 import numpy as np
 import os
 import pandas as pd
@@ -79,7 +79,7 @@ def find_all_possible_setups(setup_folder):
     if "base" in csv_names:
         csv_names.remove("base")
     
-    # Toujours inclure "base" en premier
+    # Always include "base" first
     return ["base"] + csv_names
 
 

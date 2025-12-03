@@ -82,10 +82,10 @@ class Visualisation_app_template(ABC):
         # Quand on clique → mettre à jour la liste
         self.select_setup_menu.bind("<Button-1>", self._update_setup_menu)
         
-        # Movement mode selection
+        # Dragging mode selection
         self.dragging_mode = tk.StringVar(value="Free")
         self.dragging_modes = ["Free", "Horizontal", "Vertical", "Linear", "Circular"]
-        ttk.Label(self.toolbar_frame, text="Movement Mode :").pack(pady=5)
+        ttk.Label(self.toolbar_frame, text="Dragging Mode :").pack(pady=5)
         self.dragging_mode_menu = ttk.OptionMenu(self.toolbar_frame, self.dragging_mode, self.dragging_mode.get(), *self.dragging_modes)
         self.dragging_mode_menu.pack(fill=tk.X, pady=2)
         
@@ -120,10 +120,8 @@ class Visualisation_app_template(ABC):
         self.point_size = 10
         self.focal_points_colors_RGB = ((0.8,0.7,0.9), (0.9,0.8,0.6), (0.7,0.9,0.9), (0.95,0.75,0.75))
         self.canvas_point_ids = []
-        # self.focal_points = {}
         
         self.canvas_initial_point_id = None
-        # self.initial_point = {}
         
         self.canvas_lim_line_ids = []
         self.canvas_norm_line_ids = []
@@ -140,7 +138,7 @@ class Visualisation_app_template(ABC):
         self.dragged_point_type = None
         self.dragging_focal_point_id = None
         
-        # New variables for point input functionality
+        # variables for point input functionality
         self.selected_point_id = None  # Stores the canvas ID of the currently selected point
         self.selected_point_type = None # 'focal' or 'initial'
         self.selected_focal_glass_id = None # Stores the glass_point_id if a focal point is selected
@@ -153,99 +151,89 @@ class Visualisation_app_template(ABC):
     
     def _draw_grid_and_axes(self, event=None):
         """
-        Dessine la grille, les axes, les graduations et les étiquettes sur le canevas.
-        Cette fonction est appelée chaque fois que le canevas est redimensionné.
-        MODIFIED: Le dessin est maintenant relatif au self.center_coords.
+        Draws the grid, axes, ticks, and labels on the canvas.
+        This function is called every time the canvas is resized.
         """
-        # Supprime tous les éléments précédents de la grille, des axes et des étiquettes
-        self.canvas.delete("grid_line")
-        self.canvas.delete("axis")
-        self.canvas.delete("tick_label")
-        self.canvas.delete("quadrant_bg") # Supprime les fonds de quadrant
-
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
-
+        
         if canvas_width <= 0 or canvas_height <= 0:
             return
-
+        
         self.pixels_per_unit_x = canvas_width / (self.max_space_x - self.min_space_x)
         self.pixels_per_unit_y = canvas_height / (self.max_space_y - self.min_space_y)
         
-        # Calcule les coordonnées pixel sur le canevas du centre d'oscillation
+        # Computes the pixel coordinates on the canvas of the oscillation center
         center_x_on_canvas, center_y_on_canvas = self._get_canvas_coords_from_absolute_space_coords(self.center_coords[0], self.center_coords[1])
-
-        # --- Dessin des fonds de quadrants ---
-        # Les quadrants sont définis par rapport au centre d'oscillation
-        # Quadrant 1 (x > center_x, y > center_y) - Domaine 1
+        
+        # --- Drawing the quadrant backgrounds ---
+        # Quadrant 1 (x > center_x, y > center_y) - Domain 1
         self.canvas.create_rectangle(
             center_x_on_canvas, 0, canvas_width, center_y_on_canvas,
             fill=rgb_float_tuple_to_hex(self.focal_points_colors_RGB[0]),
             outline="", tags="quadrant_bg"
         )
-        # Quadrant 2 (x < center_x, y > center_y) - Domaine 2
+        # Quadrant 2 (x < center_x, y > center_y) - Domain 2
         self.canvas.create_rectangle(
             0, 0, center_x_on_canvas, center_y_on_canvas,
             fill=rgb_float_tuple_to_hex(self.focal_points_colors_RGB[1]),
             outline="", tags="quadrant_bg"
         )
-        # Quadrant 3 (x < center_x, y < center_y) - Domaine 3
+        # Quadrant 3 (x < center_x, y < center_y) - Domain 3
         self.canvas.create_rectangle(
             0, center_y_on_canvas, center_x_on_canvas, canvas_height,
             fill=rgb_float_tuple_to_hex(self.focal_points_colors_RGB[2]),
             outline="", tags="quadrant_bg"
         )
-        # Quadrant 4 (x > center_x, y < center_y) - Domaine 4
+        # Quadrant 4 (x > center_x, y < center_y) - Domain 4
         self.canvas.create_rectangle(
             center_x_on_canvas, center_y_on_canvas, canvas_width, canvas_height,
             fill=rgb_float_tuple_to_hex(self.focal_points_colors_RGB[3]),
             outline="", tags="quadrant_bg"
         )
-
-        # --- Dessin de la Grille ---
-        # Les lignes de grille sont dessinées pour l'espace absolu
+        
+        # --- Drawing the Grid ---
         for x_absolute_space in np.arange(self.min_space_x, self.max_space_x + self.space_grid_step, self.space_grid_step):
             x_px = (x_absolute_space - self.min_space_x) * self.pixels_per_unit_x
             self.canvas.create_line(x_px, 0, x_px, canvas_height, fill="black", tags="grid_line")
-    
+        
         for y_absolute_space in np.arange(self.min_space_y, self.max_space_y + self.space_grid_step, self.space_grid_step):
             y_px = (self.max_space_y - y_absolute_space) * self.pixels_per_unit_y
             self.canvas.create_line(0, y_px, canvas_width, y_px, fill="black", tags="grid_line")
-
-        # --- Dessin des Axes ---
-        # Les axes sont dessinés à la position du centre d'oscillation sur le canevas
-        self.canvas.create_line(0, center_y_on_canvas, canvas_width, center_y_on_canvas, fill="black", width=2, tags="axis") # Axe X
-        self.canvas.create_line(center_x_on_canvas, 0, center_x_on_canvas, canvas_height, fill="black", width=2, tags="axis") # Axe Y
-
-        # Dessin du point central (anciennement l'origine)
+        
+        # --- Drawing the Axes ---
+        self.canvas.create_line(0, center_y_on_canvas, canvas_width, center_y_on_canvas, fill="black", width=2, tags="axis")  # X Axis
+        self.canvas.create_line(center_x_on_canvas, 0, center_x_on_canvas, canvas_height, fill="black", width=2, tags="axis")  # Y Axis
+        
+        # Draw the central point
         self.canvas.create_oval(center_x_on_canvas - 3, center_y_on_canvas - 3, center_x_on_canvas + 3, center_y_on_canvas + 3, fill="black", tags="axis")
-
-        # --- Dessin des Graduations et des Étiquettes ---
+        
+        # --- Drawing the Ticks and Labels ---
         tick_length = 5
-
-        # Graduations et étiquettes de l'axe X
+        
+        # Ticks and labels for the X-axis
         for x_absolute_space in np.arange(self.min_space_x, self.max_space_x + self.major_tick_step, self.major_tick_step):
             x_px = (x_absolute_space - self.min_space_x) * self.pixels_per_unit_x
             self.canvas.create_line(x_px, center_y_on_canvas - tick_length, x_px, center_y_on_canvas + tick_length, fill="black", tags="axis")
-            # Étiquette les graduations, mais pas la coordonnée X du centre si elle est déjà étiquetée par le point central
-            if abs(x_absolute_space - self.center_coords[0]) > 1e-6: # Vérifie si ce n'est pas le centre
+            # Labels the ticks, but not the X coordinate of the center if it is already labeled by the central point
+            if abs(x_absolute_space - self.center_coords[0]) > 1e-6:  # Checks if this is not the center
                 self.canvas.create_text(x_px, center_y_on_canvas + tick_length + 8, text=f"{x_absolute_space:.2f}", fill="black", tags="tick_label")
-
-        # Graduations et étiquettes de l'axe Y
+        
+        # Ticks and labels for the Y-axis
         for y_absolute_space in np.arange(self.min_space_y, self.max_space_y + self.major_tick_step, self.major_tick_step):
             y_px = (self.max_space_y - y_absolute_space) * self.pixels_per_unit_y
             self.canvas.create_line(center_x_on_canvas - tick_length, y_px, center_x_on_canvas + tick_length, y_px, fill="black", tags="axis")
-            # Étiquette les graduations, mais pas la coordonnée Y du centre
-            if abs(y_absolute_space - self.center_coords[1]) > 1e-6: # Vérifie si ce n'est pas le centre
+            # Labels the ticks, but not the Y coordinate of the center
+            if abs(y_absolute_space - self.center_coords[1]) > 1e-6:  # Checks if this is not the center
                 self.canvas.create_text(center_x_on_canvas - tick_length - 8, y_px, text=f"{y_absolute_space:.2f}", fill="black", anchor="e", tags="tick_label")
-
-        # Étiquette pour le centre de l'oscillation
+        
+        # Label for the oscillation center
         self.canvas.create_text(center_x_on_canvas + 8, center_y_on_canvas + 8, text=f"({self.center_coords[0]:.2f},{self.center_coords[1]:.2f})", fill="black", tags="tick_label")
-
-        # Étiquettes des axes (X et Y)
+        
+        # Labels for the axes (X and Y)
         self.canvas.create_text(canvas_width - 15, center_y_on_canvas + 15, text="X", fill="black", font=("Arial", 10, "bold"), tags="axis")
         self.canvas.create_text(center_x_on_canvas + 15, 15, text="Y", fill="black", font=("Arial", 10, "bold"), tags="axis")
-    
+        
     def _set_canvas(self):
         self.canvas = tk.Canvas(self.canvas_frame, bg="white", cursor="cross")
         self.canvas.pack(fill=tk.BOTH, expand=True)
@@ -280,7 +268,7 @@ class Visualisation_app_template(ABC):
     #%%Utilitary functions
     def _get_absolute_space_coords_from_canvas_coords(self, canvas_x, canvas_y):
         """
-        Convertit les coordonnées en pixels du canevas en coordonnées absolues de notre système "espace".
+        Converts coordinates pixels canvas' coordinates into absolute coordinates of the "space" system.
         """
         width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
@@ -295,7 +283,7 @@ class Visualisation_app_template(ABC):
 
     def _get_canvas_coords_from_absolute_space_coords(self, x_absolute_space, y_absolute_space):
         """
-        Convertit les coordonnées absolues du système "espace" en coordonnées en pixels sur le canevas.
+        Converts absolute coordinates of the "space" system into pixels canvas coordinates.
         """
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
@@ -367,8 +355,8 @@ class Visualisation_app_template(ABC):
     
     def _find_glass_point_id_from_canvas_id(self, canva_point_id):
         """
-        Recherche et retourne le glass_point_id associé à un canva_point_id donné.
-        Retourne None si aucun point ne correspond.
+        Search and return the glass_point_id associated with a given canva_point_id.
+        Returns None if no point corresponds to it.
         """
         for glass_point_id, data in self.focal_points.items():
             if data['canva_point_id'] == canva_point_id:
@@ -384,7 +372,7 @@ class Visualisation_app_template(ABC):
         """When something gets focus, decide if Return should be bound."""
         widget = event.widget
     
-        # Sécurisation : ignorer si widget est None ou une string (ex: '__tk__messagebox')
+        # Security : ignore if widget is None or a string (ex : '__tk__messagebox')
         if widget is None or isinstance(widget, str):
             self._unbind_return()
             return
@@ -411,22 +399,22 @@ class Visualisation_app_template(ABC):
             new_focus = self.root.focus_get()
         except Exception:
             new_focus = None
-    
-        # Cas où focus est un identifiant de widget (str) → ignorer
+            
+        # Cas where is a widget identifier (str) : ignore
         if isinstance(new_focus, str):
             self._unbind_return()
             return
     
         for frame in self.return_bindings:
             if self._is_inside_widget(new_focus, frame):
-                return  # Still inside a registered frame → keep binding
+                return  # Still inside a registered frame : keep binding
         self._unbind_return()
     
     
     @staticmethod
     def _is_inside_widget(widget, container):
         """Check if widget is inside container (or is the container)."""
-        # Protection si widget est None ou une string
+        # Protection if widget is None or a string
         if widget is None or isinstance(widget, str):
             return False
     
@@ -744,17 +732,17 @@ class Visualisation_app_template(ABC):
                     if previous_canva_point_id in self.canvas_point_ids:
                         self.canvas_point_ids.remove(previous_canva_point_id)
             
-            # Calculate angles (Pass coordinates relative to the new center)
+            # Calculate angles
             x_relative_to_center = x_absolute_space - self.center_coords[0]
             y_relative_to_center = y_absolute_space - self.center_coords[1]
             angle_theta = calculate_theta(x_relative_to_center, y_relative_to_center)
             angle_delta = calculate_delta(x_relative_to_center, y_relative_to_center, domain_location_id) # Use location ID for delta
 
-            # Ajout au canvas
+            # Adding the point to the canvas
             canva_point_id = self.canvas.create_oval(x_canvas-self.point_size, y_canvas-self.point_size, x_canvas+self.point_size, y_canvas+self.point_size, fill=rgb_float_tuple_to_hex(self.focal_points_colors_RGB[glass_point_id-1]))
             self.canvas_point_ids.append(canva_point_id)  # Store the ID of the created point
             
-            # Ajout au dictionnaire self.focal_points, stockant les coordonnées RELATIVES au centre
+            # Adding it to the dictionary self.focal_points
             self.focal_points[glass_point_id] = {
                 'canva_point_id': canva_point_id,
                 'canvas_coords': np.array([x_canvas, y_canvas]),
@@ -772,7 +760,7 @@ class Visualisation_app_template(ABC):
                 # Reset showed setup
                 self.setup_strvar.set("")
 
-            # Update la frame de résultats et les trajectoires
+            # Update the results frame and the points linked constructions
             self._update_all_canvas_focal_point_linked_constructions()
             self._update_result_frame()
             self._update_point_input_fields() # Update input fields for the newly added point and apply outline
@@ -798,10 +786,10 @@ class Visualisation_app_template(ABC):
         # Recalculate canvas coords in case of minor snapping to quadrant (though initial point can be on axis)
         x_canvas_final, y_canvas_final = self._get_canvas_coords_from_absolute_space_coords(x_absolute_space, y_absolute_space)
 
-        # Ajout au canvas
+        # Adding the point to the canvas au canvas
         self.canvas_initial_point_id = self.canvas.create_oval(x_canvas_final-self.point_size, y_canvas_final-self.point_size, x_canvas_final+self.point_size, y_canvas_final+self.point_size, fill='black')
         
-        # Création du dictionnaire lié, stockant les coordonnées RELATIVES au centre
+        # Creation of the linked dictionary
         self.initial_point = {
             'domain_id': domain_id,
             'canva_point_id': self.canvas_initial_point_id,
@@ -819,7 +807,7 @@ class Visualisation_app_template(ABC):
             # Reset showed setup
             self.setup_strvar.set("")
         
-        # Update la frame de résultats et les trajectoires
+        # Update the frame result and the normal trajectory
         self._update_canvas_normal_traj()
         self._update_result_frame()
         self._update_point_input_fields() # Apply outline
@@ -840,7 +828,7 @@ class Visualisation_app_template(ABC):
                     self._unselect_point()
             
             self.setup_strvar.set("")
-            # Update la frame de résultats et les trajectoires
+            # Update the frame result and the points linked constructions
             self._update_all_canvas_focal_point_linked_constructions()
             self._update_result_frame()
             self._update_point_input_fields() # Update input fields and outline
@@ -861,7 +849,7 @@ class Visualisation_app_template(ABC):
                 self._unselect_point()
             
             self.setup_strvar.set("")
-            # Update la frame de résultats et la trajectoire
+            # Update the frame result and the points linked constructions
             self._update_canvas_normal_traj()
             self._update_result_frame()
             self._update_point_input_fields()
@@ -884,7 +872,7 @@ class Visualisation_app_template(ABC):
         self._reload_canvas()
         self._show_notification("All canvas points cleared", bg_color='cyan')
         
-        # Update la frame de résultats et les trajectoires
+        # Update the frame result and the points linked constructions
         self._update_result_frame()
         self._update_point_input_fields()
     
@@ -910,25 +898,25 @@ class Visualisation_app_template(ABC):
         if type(new_setup_name) is str:
             self.setup_name = new_setup_name.strip()
         else:
-            self.setup_name = new_setup_name.get().strip()   # Récupération du texte entré
+            self.setup_name = new_setup_name.get().strip()
         print("Setup name :", self.setup_name)
 
-        # Vérifier que le nom n'est pas vide
+        # Check that the name is not empty
         if not self.setup_name and not is_base_save:
             tk.messagebox.showwarning("Error", "Enter a valid name.")
             return
 
-        # Chemin du dossier de sauvegarde
+        # Save direction
         os.makedirs(self.setup_folder, exist_ok=True)
 
-        # Chemin complet du fichier
+        # Complete file direction
         file_path = os.path.join(self.setup_folder, f"{self.setup_name}.csv")
         
         if os.path.exists(file_path) and not is_base_save:
             action = ask_overwrite_action(self.setup_name)
         
             if action == "replace":
-                pass  # on continue et écrase le fichier
+                pass  # keep going and replace file
             elif action == "new":
                 base_name = self.setup_name
                 i = 1
@@ -938,7 +926,7 @@ class Visualisation_app_template(ABC):
                     new_file_path = os.path.join(self.setup_folder, f"{base_name}_{i}.csv")
                 
                 file_path = new_file_path
-                self.setup_name = f"{base_name}_{i}"  # on met à jour le nom
+                self.setup_name = f"{base_name}_{i}"
                 print(f"New auto-generated : {self.setup_name}")
             else:  # cancel
                 return
@@ -948,7 +936,7 @@ class Visualisation_app_template(ABC):
 
         print(f"Setup '{self.setup_name}' saved in {file_path}")
         self.setup_strvar.set(f"{self.setup_name}")
-        # Fermer la fenêtre pop-up (debind toutes les touches liées)
+        # Closes pop-up window (also debinds all binded keys)
         if not is_base_save:
             self.save_popup.destroy()
     
@@ -963,22 +951,22 @@ class Visualisation_app_template(ABC):
 
         ttk.Label(self.save_popup, text="Enter setup name :").pack(pady=2)
 
-        # Création d'une variable pour stocker le texte
+        # Creating a variable to store the save name
         strvar = tk.StringVar()
 
-        # Champ de saisie (ttk)
+        # ttk enter field
         entry = ttk.Entry(self.save_popup, textvariable=strvar)
         entry.pack(fill=tk.X, pady=2)
 
-        # Associer la touche Enter à la validation
+        # Bind the Enter key to the validation
         entry.bind("<Return>", lambda event: self._save_setup(strvar))
 
-        # Bouton pour valider la saisie (ttk)
+        # Button to validate the entry (ttk)
         validate_button = ttk.Button(self.save_popup, text="Validate setup name",
                                      command=lambda: self._save_setup(strvar))
         validate_button.pack()
 
-        # Bouton pour fermer la fenêtre (ttk)
+        # Cancel button (ttk)
         close_button = ttk.Button(self.save_popup, text="Cancel save", command=self.save_popup.destroy)
         close_button.pack()
 
@@ -989,18 +977,14 @@ class Visualisation_app_template(ABC):
         self.setups = find_all_possible_setups(self.setup_folder)
 
         menu = self.select_setup_menu["menu"]
-        menu.delete(0, "end")  # Supprime anciennes options
+        menu.delete(0, "end")
 
-        # Ajoute les nouvelles options
+        # Add the new options
         for s in self.setups:
             menu.add_command(
                 label=s,
                 command=lambda value=s: self._apply_new_setup(value)
             )
-
-        # Si la valeur courante n’existe plus → reset sur "base"
-        if self.setup_strvar.get() not in self.setups:
-            self.setup_strvar.set("base")
     
     def _apply_new_setup(self, value):
         self.setup_strvar.set(value)
@@ -1244,7 +1228,7 @@ class Visualisation_app_template(ABC):
                     ])
                 }
     
-            # Vérifier les points invalides AVANT modification
+            # Check invalid points before modifying
             invalid_ids = self._check_invalid_focal_points(potential_focal_points)
     
             if invalid_ids:
@@ -1401,7 +1385,7 @@ class Visualisation_app_template(ABC):
         Also updates the visual selection (blue outline) on the canvas *without* redrawing all points.
         Input/output coordinates are now absolute instead of relative.
         """
-        # First, remove selection visual from ALL points
+        # First, remove visual selection from ALL points
         # Iterate through all focal points' canvas IDs
         for glass_id, point_data in self.focal_points.items():
             if 'canva_point_id' in point_data:
@@ -1457,8 +1441,8 @@ class Visualisation_app_template(ABC):
             return
 
         try:
-            new_x_absolute = float(self.point_x_var.get()) # Read as absolute
-            new_y_absolute = float(self.point_y_var.get()) # Read as absolute
+            new_x_absolute = float(self.point_x_var.get())
+            new_y_absolute = float(self.point_y_var.get())
         except ValueError:
             self._show_notification("Invalid coordinates. Please enter numbers.", bg_color='orange')
             return
@@ -1483,7 +1467,7 @@ class Visualisation_app_template(ABC):
             self.initial_point['domain_id'] = domain_id
             
                         
-            # Placement du point sur le canvas
+            # Place the point on the canvas
             x_canvas, y_canvas = self._get_canvas_coords_from_absolute_space_coords(new_x_absolute, new_y_absolute)
             self._add_initial_point(x_canvas, y_canvas, from_apply_point_coords=True)
             
@@ -1515,7 +1499,7 @@ class Visualisation_app_template(ABC):
             point_data['angle_theta'] = calculate_theta(new_x_relative, new_y_relative) # Use relative for angle calculation
             point_data['angle_delta'] = calculate_delta(new_x_relative, new_y_relative, domain_location_id) # Use relative for angle calculation
             
-            # Placement du point sur le canvas
+            # Place the point on the canvas
             x_canvas, y_canvas = self._get_canvas_coords_from_absolute_space_coords(new_x_absolute, new_y_absolute)
             self._add_focal_point(x_canvas, y_canvas, from_apply_point_coords=True)
         

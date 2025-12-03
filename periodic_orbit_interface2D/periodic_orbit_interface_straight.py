@@ -1,4 +1,4 @@
-#%%Importations
+#%%Imports
 import tkinter as tk
 from tkinter import ttk  # Using ttk for potentially more modern widgets
 import numpy as np
@@ -15,7 +15,6 @@ class Visualisation_app_straight(Visualisation_app_template):
         self.app_mode = "straight"
     
     #%%Calculus linked functions
-    # Ces fonctions opèrent sur les space_coords qui sont maintenant relatives au centre
     @property
     def _rho(self):
         if len(self.focal_points) != 4:
@@ -174,10 +173,7 @@ class Visualisation_app_straight(Visualisation_app_template):
                                   "rel_space_coords": np.array([row["init_x"] - row["center_x"], row["init_y"] - row["center_y"]])}
         
         # --- Update gamma value ---
-        try:
-            self.gamma = row["gamma"]
-        except KeyError:
-            print('Valeur de gamma non trouvée (reste inchangée)')
+        self.gamma = row["gamma"]
     
     def _update_gamma_input_fields(self):
         self.gamma_var.set(f"{self.gamma:.2f}")
@@ -313,16 +309,16 @@ class Visualisation_app_straight(Visualisation_app_template):
         
         if self.initial_point or self.focal_points:
             
-            results_text += "Coordonnées des points (absolues)\n"
+            results_text += "Coordinates of the points (absolute)\n"
         if self.initial_point:
             x_space_abs, y_space_abs = self.initial_point['abs_space_coords']
-            results_text += f"Point initial : ({x_space_abs:.2f}, {y_space_abs:.2f})\n\n"
+            results_text += f"Initial point : ({x_space_abs:.2f}, {y_space_abs:.2f})\n\n"
         
         if self.focal_points:
             for point_id in sorted(self.focal_points):
                 point_data = self.focal_points[point_id]
                 x_space_abs, y_space_abs = point_data['abs_space_coords']
-                results_text += f"Point focal {point_id} : ({x_space_abs:.2f}, {y_space_abs:.2f})"
+                results_text += f"Focal point {point_id} : ({x_space_abs:.2f}, {y_space_abs:.2f})"
                 
                 if 'angle_theta' in point_data and 'angle_delta' in point_data:
                     results_text += f" (Theta: {point_data['angle_theta']:.2f}°, Delta: {point_data['angle_delta']:.2f}°)\n"
@@ -330,38 +326,38 @@ class Visualisation_app_straight(Visualisation_app_template):
                     results_text += "\n"
             
             if len(self.focal_points) == 4:
-                results_text += "\n\nGrandeurs caractéristiques\n"
+                results_text += "\n\nCharacteristic values\n"
                 results_text += f"rho : {self._rho:.4f}\n"
                 results_text += f"r : {self._r:.4f}\n"
                 h1_lim_abs = self._h1_lim + self.center_coords[0]
                 results_text += f"h1_lim : {h1_lim_abs:.4f}\n"
                 
                 if self._rho > 1 and not np.isnan(self._rho) and not np.isinf(self._rho): # Check for valid rho
-                    results_text += "\n\nCaractéristiques de l'orbite périodique\n"
+                    results_text += "\n\nCharacteristics of the periodic orbit\n"
                     try:
                         dist1, dist2, dist3, dist4, dist_total = self._compute_lim_trajs_lengths_per_zones()
                         time1, time2, time3, time4, time_total = self._compute_lim_trajs_durations_per_zones()
                         amp_x, amp_y = self._compute_lim_trajs_amplitudes()
-                        results_text += f"Trajectoire domaine 1 :\n Longueur : {dist1:.2f}, Durée : {time1:.2f} h\n\n"
-                        results_text += f"Trajectoire domaine 2 :\n Longueur : {dist2:.2f}, Durée : {time2:.2f} h\n\n"
-                        results_text += f"Trajectoire domaine 3 :\n Longueur : {dist3:.2f}, Durée : {time3:.2f} h\n\n"
-                        results_text += f"Trajectoire domaine 4 :\n Longueur : {dist4:.2f}, Durée : {time4:.2f} h\n\n"
-                        results_text += f"Trajectoire complète :\n Longueur totale : {dist_total:.2f}, Durée totale : {time_total:.4f} h\n\n"
+                        results_text += f"Trajectory domain 1 :\nLength : {dist1:.2f}, Duration : {time1:.2f} h\n\n"
+                        results_text += f"Trajectory domain 2 :\nLength : {dist2:.2f}, Duration : {time2:.2f} h\n\n"
+                        results_text += f"Trajectory domain 3 :\nLength : {dist3:.2f}, Duration : {time3:.2f} h\n\n"
+                        results_text += f"Trajectory domain 4 :\nLength : {dist4:.2f}, Duration : {time4:.2f} h\n\n"
+                        results_text += f"Complete limit trajectory :\n Total length : {dist_total:.2f}, Total duration : {time_total:.4f} h\n\n"
                         results_text += "\nAmplitudes\n"
-                        results_text += f"Amplitude selon x : {amp_x:.4f}, Amplitude selon y : {amp_y:.4f}"
-                        results_text += "\n\nCoordonnées des points d'intersections\n"
+                        results_text += f"Amplitude on x axis : {amp_x:.4f}, Amplitude on y axis : {amp_y:.4f}"
+                        results_text += "\n\nCoordinates of the intersection points\n"
                         start_limit_point_abs = self.start_limit_point + self.center_coords
                         intersect_point1_abs = self.intersect_point1 + self.center_coords
                         intersect_point2_abs = self.intersect_point2 + self.center_coords
                         intersect_point3_abs = self.intersect_point3 + self.center_coords
-                        results_text += f"Point d'intersection 4-1 : ({start_limit_point_abs[0]:.2f}, {start_limit_point_abs[1]:.2f})\n"
-                        results_text += f"Point d'intersection 1-2 : ({intersect_point1_abs[0]:.2f}, {intersect_point1_abs[1]:.2f})\n"
-                        results_text += f"Point d'intersection 2-3 : ({intersect_point2_abs[0]:.2f}, {intersect_point2_abs[1]:.2f})\n"
-                        results_text += f"Point d'intersection 3-4 : ({intersect_point3_abs[0]:.2f}, {intersect_point3_abs[1]:.2f})\n"
+                        results_text += f"Intersection point 4-1 : ({start_limit_point_abs[0]:.2f}, {start_limit_point_abs[1]:.2f})\n"
+                        results_text += f"Intersection point 1-2 : ({intersect_point1_abs[0]:.2f}, {intersect_point1_abs[1]:.2f})\n"
+                        results_text += f"Intersection point 2-3 : ({intersect_point2_abs[0]:.2f}, {intersect_point2_abs[1]:.2f})\n"
+                        results_text += f"Intersection point 3-4 : ({intersect_point3_abs[0]:.2f}, {intersect_point3_abs[1]:.2f})\n"
                     except Exception as e:
                         results_text += f"Error calculating trajectories: {e}\n"
                         results_text += "Please ensure focal points are not on axes relative to each other for trajectory calculations."
                 else:
-                    results_text += "\n Pas d'orbite périodique \n"
+                    results_text += "\n No periodic orbit observed \n"
             
         self.results_label.config(text=results_text)
