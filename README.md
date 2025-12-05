@@ -8,9 +8,7 @@ Two working "modes" of the application are available, one with equal degradation
 
 ## Installation
 
-The application package can be installed from TestPyPI using pip installer.  
-It is recommended to use a separate Python environment.  
-To use the application, run the test files contained in the `tests` folder.
+The application package can be installed from TestPyPI using pip installer by typing the command below in a Python environment. It is recommanded to do so in a separated Python environnement. To use the application, run the test files contained in the `tests` folder.
 
 ### Unix / macOS
 
@@ -23,22 +21,6 @@ python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-u
 ```bash
 py -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ periodic-orbit-interface2D
 ```
-
-
-The application package can be installed from TestPyPI using pip installer by typing the command below in a Python environment. It is recommanded to do so in a separated Python environnement. To use the application, run the test files contained in the tests folder.
-
-
-.. tab:: Unix/macOS
-
-    .. code-block:: bash
-
-        python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ periodic-orbit-interface2D
-
-.. tab:: Windows
-
-    .. code-block:: bat
-
-        py -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ periodic-orbit-interface2D
 
 ## Mathematical context of the application use
 
