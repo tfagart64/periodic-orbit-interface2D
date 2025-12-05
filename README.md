@@ -2,7 +2,52 @@
 
 This application uses TKinter python module to create an interface. On this interface, the user can place focal points in a 2D phase space and observe the resulting limit cycle, should there be one. The app models only the behaviour expected in the case of a 2D piecewise affine system. The system should present only two threshold values for domain definitions, one for each component. This then divides the 2D space in 4 different domains. They will be named as follow : $1$ (top-right), $2$ (top-left), $3$ (bottom-left) and $4$ (bottom-right). The trajectory will alternate domains in the following order : $1 \to 2 \to 3 \to 4 \to 1$. Two working "modes" of the application are available, one with equal degradation rates called "straight" mode and whose corresponding class is Visualisation_app_straight and the other with degradation rates depending on the component and the domain called "non_straight" mode and whose corresponding class is "Visualisation_app_non_straight.
 
-## Precise mathematical context of the application use
+## Mathematical context of the application use
+
+To be as general possible without introducing heavy notations, we use the form given in the equation below:
+
+```math
+    \frac{dx}{dt} = \kappa(x) - \Gamma(x)\, x
+```
+
+Here, $`\kappa : \mathbb{R}_{+}^{n} \to \mathbb{R}_{+}^{n}`$ is a vector of piecewise constant production rates, which can be expressed using step functions $\mathrm{s}^\pm(x_j,\theta_j)$. $\Gamma \in \mathbb{R}_{+}^{n\times n}$ is a diagonal matrix whose diagonal entries are degradation coefficients, which can also be expressed using the same step functions $\mathrm{s}^\pm(x_j,\theta_j)$. This correctly reflects the fact that the degradation coefficients depend both on the coordinate and on the domain.
+
+Although it is still possible to further generalize the framework as in the original paper, we restrict ourselves here to the case where there exists a unique threshold $\theta_j$ per component. Moreover, we work in dimension $2$. We therefore have only two thresholds, $\theta_1$ and $\theta_2$, corresponding to the components $x_1$ and $x_2$, respectively. These two thresholds partition the space into four rectangular domains. We denote these domains by
+- $a^1$ (upper right quadrant),
+- $a^2$ (upper left quadrant),
+- $a^3$ (lower left quadrant),
+- $a^4$ (lower right quadrant).
+
+For now, we assume that these domains do not include their boundary sets, or equivalently that they are equal to their own interiors. For instance, $a^1 = (\theta_1, +\infty) \times (\theta_2, +\infty)$.
+
+Due to the piecewise affine nature of the equations, the system can be solved explicitly on each regular domain $a^i$. For each coordinate $j$, in each domain $i$, with initial condition $x^i \in a^i$ and for $t \ge 0$, we obtain:
+
+```math
+    \varphi^i_j(x^i,t) = x^i_j(t) = \frac{\kappa^i_j}{\gamma^i_j}
+    + e^{-\gamma^i_j t} \left(x^i_j - \frac{\kappa^i_j}{\gamma^i_j} \right)
+```
+
+We further denote by $\phi^i = \phi(a^i)$ the focal point associated with the domain $a^i$, by $W^i$ the wall between the domains $a^i$ and $a^{i+1}$, and by $s_i$ the exit direction from the domain $a^i$. The expression of the focal point $\phi^i$ is given componentwise by:
+
+```math
+    \phi^i_j = \frac{\kappa^i_j}{\gamma^i_j}
+```
+
+We now impose the alternation of the domains as $1 \to 2 \to 3 \to 4 \to 1$. Without loss of generality, this assumption can always be made in dimension 2. Indeed, we assume that trajectories cannot cross a domain by passing through an intersection of walls, “diagonally”, or “through the center”. Moreover, the direction of rotation and the initial domain are merely conventions. Changing these conventions does not affect the nature of the analysis.
+
+To enforce this domain alternation, we require suitable assumptions on the focal points. We assume that each focal point $\phi^i$ lies in the interior of the next domain $a^{i+1}$ (in particular, focal points cannot lie on the walls). Concretely, this is expressed by the following system of inequalities:
+
+```math
+    \left\{
+    \begin{aligned}
+        & \phi^1 \in a^2 & &\Longleftrightarrow & \phi^1_1 < \theta_1 \text{ and } \phi^1_2 > \theta_2\\
+        & \phi^2 \in a^3 & &\Longleftrightarrow  &\phi^2_1 < \theta_1 \text{ and } \phi^2_2 < \theta_2\\
+        & \phi^3 \in a^4 & &\Longleftrightarrow & \phi^3_1 > \theta_1 \text{ and } \phi^3_2 < \theta_2\\
+        & \phi^4 \in a^1 & &\Longleftrightarrow & \phi^4_1 > \theta_1 \text{ and } \phi^4_2 > \theta_2
+    \end{aligned}
+    \right.
+```
+These assomptions allow us to have a minimal working system. They are sufficiently general to be applied to both application modes. For the mathematical part, the difference in the "straight" mode application is that all the two $\gamma$ coefficients are not using step functions in their expressions and are equal.
 
 ## Main differences between the arbitrary and equal degradation coefficients modes
 
