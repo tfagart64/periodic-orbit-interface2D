@@ -1,4 +1,30 @@
 # periodic-orbit-interface2D
+
+
+
+This local application uses TKinter python module to create an interface. On this interface, the user can place focal points in a 2D phase space and observe the resulting limit cycle, should there be one. The app models only the behaviour expected in the case of a 2D piecewise affine system. The system should present only two threshold values for domain definitions, one for each component. This then divides the 2D space in 4 different domains. They will be named as follow : $1$ (top-right), $2$ (top-left), $3$ (bottom-left) and $4$ (bottom-right). The trajectory will alternate domains in the following order : $1 \to 2 \to 3 \to 4 \to 1$.
+
+Two working "modes" of the application are available, one with equal degradation rates called "straight" mode and whose corresponding class is Visualisation_app_straight and the other with degradation rates depending on the component and the domain called "non_straight" mode and whose corresponding class is "Visualisation_app_non_straight.
+
+## Installation
+
+The application package can be installed from TestPyPI using pip installer.  
+It is recommended to use a separate Python environment.  
+To use the application, run the test files contained in the `tests` folder.
+
+### Unix / macOS
+
+```bash
+python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ periodic-orbit-interface2D
+```
+
+### Windows
+
+```bash
+py -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ periodic-orbit-interface2D
+```
+
+
 The application package can be installed from TestPyPI using pip installer by typing the command below in a Python environment. It is recommanded to do so in a separated Python environnement. To use the application, run the test files contained in the tests folder.
 
 
@@ -13,12 +39,6 @@ The application package can be installed from TestPyPI using pip installer by ty
     .. code-block:: bat
 
         py -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ periodic-orbit-interface2D
-
-
-
-This local application uses TKinter python module to create an interface. On this interface, the user can place focal points in a 2D phase space and observe the resulting limit cycle, should there be one. The app models only the behaviour expected in the case of a 2D piecewise affine system. The system should present only two threshold values for domain definitions, one for each component. This then divides the 2D space in 4 different domains. They will be named as follow : $1$ (top-right), $2$ (top-left), $3$ (bottom-left) and $4$ (bottom-right). The trajectory will alternate domains in the following order : $1 \to 2 \to 3 \to 4 \to 1$.
-
-Two working "modes" of the application are available, one with equal degradation rates called "straight" mode and whose corresponding class is Visualisation_app_straight and the other with degradation rates depending on the component and the domain called "non_straight" mode and whose corresponding class is "Visualisation_app_non_straight.
 
 ## Mathematical context of the application use
 
